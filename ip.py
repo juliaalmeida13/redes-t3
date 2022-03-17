@@ -51,7 +51,8 @@ class IP:
         """
         # TODO: Guarde a tabela de encaminhamento. Se julgar conveniente,
         # converta-a em uma estrutura de dados mais eficiente.
-        pass
+        #passo 1
+        self.tabela = tabela
 
     def registrar_recebedor(self, callback):
         """
