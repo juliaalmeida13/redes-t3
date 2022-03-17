@@ -32,6 +32,7 @@ class IP:
         # TODO: Use a tabela de encaminhamento para determinar o próximo salto
         # (next_hop) a partir do endereço de destino do datagrama (dest_addr).
         # Retorne o next_hop para o dest_addr fornecido.
+        enc = []
         for itemTabela in self.tabela:
             if ip_address(dest_addr) in ip_network(itemTabela[0]):
                 enc = [itemTabela]
