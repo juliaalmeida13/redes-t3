@@ -35,7 +35,7 @@ class IP:
         for itemTabela in self.tabela:
             if ip_address(dest_addr) in ip_network(itemTabela[0]):
                 enc = [itemTabela]
-        enc.sort(key = lambda x: ip_network(x[0]).prefixlen, reversed = True)
+        enc.sort(key = lambda x: ip_network(x[0]).prefixlen, reverse = True)
         if enc:
             return enc[0][1]
 
