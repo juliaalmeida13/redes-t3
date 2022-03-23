@@ -52,11 +52,6 @@ class IP:
         enc.sort(key = lambda x: ip_network(x[0]).prefixlen, reverse = True)
         if enc:
             return enc[0][1]
-        
-        if len(enc) > 0:
-            enc.sort(key=lambda x: x[0], reverse=True)
-            cidr = enc[0][1]
-            return self.tabela[cidr]
 
 
     def _header(self, seg, dest_addr, source_addr=None, version=4, ihl=5,
