@@ -91,7 +91,7 @@ class IP:
         """
         self.callback = callback
 
-    def enviar(self, segmento, dest_addr, datagrama):
+    def enviar(self, segmento, dest_addr):
         """
         Envia segmento para dest_addr, onde dest_addr é um endereço IPv4
         (string no formato x.y.z.w).
