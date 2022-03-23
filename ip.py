@@ -27,7 +27,7 @@ class IP:
         else:
             # roteador
             next_hop = self._next_hop(dst_addr)
-            # TODO: Trate corretamente o campo TTL do datagrama
+            # TODO: Trate corretamanhoente o campo TTL do datagrama
             #Passo 4
             vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, \
             checksum, src_addr, dest_addr = \
@@ -99,4 +99,9 @@ class IP:
         next_hop = self._next_hop(dest_addr)
         # TODO: Assumindo que a camada superior é o protocolo TCP, monte o
         # datagrama com o cabeçalho IP, contendo como payload o segmento.
+        self.enlace.enviar(datagrama, next_hop)
+
+        tamanho = 20+len(segmento)
+        checksum = calc_checksum(struct.pack('!BBHHHBBH', 69, 0, tamanho, self.id, 0, 64, 6, 0) + str2addr(self.meu_endereco) + str2addr(dest_addr))
+        datagrama = struct.pack('!BBHHHBBH', 69, 0, tamanho, self.id, 0, 64, 6, checksum) + str2addr(self.meu_endereco) + str2addr(dest_addr) + segmento
         self.enlace.enviar(datagrama, next_hop)
