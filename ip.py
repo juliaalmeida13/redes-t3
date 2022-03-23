@@ -41,7 +41,7 @@ class IP:
                 self.enlace.enviar(next_hop, next_hop)
     
     def _header(self, seg, dest_addr, source_addr=None, version=4, ihl=5,
-                      dscp=0, enc=0, identification=None, flags=0, frag_offset=0, 
+                      dscp=0, ecn=0, identification=None, flags=0, frag_offset=0, 
                       ttl=64, protocol=IPPROTO_TCP, header_checksum=0):
         len_total = len(seg) + 20
         if identification is None:
