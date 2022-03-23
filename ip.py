@@ -99,6 +99,6 @@ class IP:
         next_hop = self._next_hop(dest_addr)
         # TODO: Assumindo que a camada superior é o protocolo TCP, monte o
         # datagrama com o cabeçalho IP, contendo como payload o segmento.
-        checksum = calc_checksum(struct.pack('!BBHHHBBH', 69, 0, 20+len(segmento), self.id, 0, 64, 6, 0) + str2addr(self.meu_endereco) + str2addr(dest_addr))
+        checksum = calc_checksum(struct.pack('!BBHHHBBH', 69, 0, 20+len(segmento), self.identification, 0, 64, 6, 0) + str2addr(self.meu_endereco) + str2addr(dest_addr))
         datagrama = struct.pack('!BBHHHBBH', 69, 0, 20+len(segmento), self.identification, 0, 64, 6, checksum) + str2addr(self.meu_endereco) + str2addr(dest_addr) + segmento
         self.enlace.enviar(datagrama, next_hop)
