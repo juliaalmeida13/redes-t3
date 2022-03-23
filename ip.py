@@ -32,8 +32,9 @@ class IP:
             vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, \
             checksum, src_addr, dest_addr = \
             struct.unpack('!BBHHHBBHII', datagrama[:20])
+            
             #decrementa ttl
-            --ttl
+            ttl -=1
 
             if ttl == 0:
                 typ = 11
