@@ -32,7 +32,7 @@ class IP:
             vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, \
             checksum, src_addr, dest_addr = \
             struct.unpack('!BBHHHBBHII', datagrama[:20])
-            
+
             #decrementa ttl
             ttl -=1
 
@@ -45,7 +45,7 @@ class IP:
                 addr_int = int.from_bytes(str2addr(self.meu_endereco), "big")
                 checksum = calc_checksum(struct.pack('!BBHHHBBHII', vihl, dscpecn, 20+len(icmp), identification, flagsfrag, 64, 1, 0, addr_int, src_addr))
                 datagrama = struct.pack('!BBHHHBBHII', vihl, dscpecn, 20+len(icmp), identification, flagsfrag, 64, 1, checksum, addr_int, src_addr) + icmp
-                self.idn+=1
+                self.identification+=1
                 self.enlace.enviar(datagrama, next_hop)
             else:
                 checksum = calc_checksum(struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, 0, src_addr, dest_addr))
@@ -91,7 +91,7 @@ class IP:
         """
         self.callback = callback
 
-    def enviar(self, segmento, dest_addr):
+    def enviar(self, segmento, dest_addr, datagrama):
         """
         Envia segmento para dest_addr, onde dest_addr é um endereço IPv4
         (string no formato x.y.z.w).
