@@ -1,5 +1,6 @@
 from ipaddress import ip_address, ip_network
 from iputils import *
+import struct
 
 
 class IP:
@@ -14,6 +15,7 @@ class IP:
         self.enlace.registrar_recebedor(self.__raw_recv)
         self.ignore_checksum = self.enlace.ignore_checksum
         self.meu_endereco = None
+        self.identification = 0
 
     def __raw_recv(self, datagrama):
         dscp, ecn, identification, flags, frag_offset, ttl, proto, \
@@ -29,10 +31,36 @@ class IP:
             #Passo 4
             --ttl #decrementando TTL
             if ttl !=0:
+                header = self._header(payload, dst_addr, src_addr,
+                                      dscp=dscp, ecn=ecn, identification=identification,
+                                      flags=flags, frag_offset=frag_offset, ttl=ttl, protocol=proto)
+                datagrama = header + payload
                 self.enlace.enviar(datagrama, next_hop)
             elif ttl == 0:
                 next_hop = self._next_hop(scr_addr)
                 self.enlace.enviar(next_hop, next_hop)
+    
+    def _header(self, seg, dest_addr, source_addr=None, version=4, ihl=5,
+                      dscp=0, enc=0, identification=None, flags=0, frag_offset=0, 
+                      ttl=64, protocol=IPPROTO_TCP, header_checksum=0):
+        len_total = len(seg) + 20
+        if identification is None:
+            identification = self.identification
+            ++self.identification
+        elif source_addr is None:
+            source_addr = self.meu_endereco
+        
+        source_addr = struct.unpack('!I', srt2addr(source_addr))
+        source_addr = struct.unpack('!I', srt2addr(dest_addr))
+        temp = struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len,
+                           identification, flagsfrag, ttl, protocol, header_checksum,
+                           source_addr, dest_addr)
+        header_checksum = calc_checksum(temp)
+        header = struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len,
+                             identification, flagsfrag, ttl, protocol, header_checksum,
+                             source_addr, dest_addr)
+
+        return header
 
     def _next_hop(self, dest_addr):
         # TODO: Use a tabela de encaminhamento para determinar o próximo salto
