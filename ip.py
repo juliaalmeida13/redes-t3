@@ -37,30 +37,9 @@ class IP:
                 datagrama = header + payload
                 self.enlace.enviar(datagrama, next_hop)
             elif ttl == 0:
-                next_hop = self._next_hop(scr_addr)
+                next_hop = self._next_hop(src_addr)
                 self.enlace.enviar(next_hop, next_hop)
-    
-    def _header(self, seg, dest_addr, source_addr=None, version=4, ihl=5,
-                      dscp=0, ecn=0, identification=None, flags=0, frag_offset=0, 
-                      ttl=64, protocol=IPPROTO_TCP, header_checksum=0):
-        len_total = len(seg) + 20
-        if identification is None:
-            identification = self.identification
-            ++self.identification
-        elif source_addr is None:
-            source_addr = self.meu_endereco
-        
-        source_addr = struct.unpack('!I', srt2addr(source_addr))
-        source_addr = struct.unpack('!I', srt2addr(dest_addr))
-        temp = struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len,
-                           identification, flagsfrag, ttl, protocol, header_checksum,
-                           source_addr, dest_addr)
-        header_checksum = calc_checksum(temp)
-        header = struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len,
-                             identification, flagsfrag, ttl, protocol, header_checksum,
-                             source_addr, dest_addr)
 
-        return header
 
     def _next_hop(self, dest_addr):
         # TODO: Use a tabela de encaminhamento para determinar o próximo salto
@@ -78,6 +57,32 @@ class IP:
             enc.sort(key=lambda x: x[0], reverse=True)
             cidr = enc[0][1]
             return self.tabela[cidr]
+
+
+    def _header(self, seg, dest_addr, source_addr=None, version=4, ihl=5,
+                      dscp=0, ecn=0, identification=None, flags=0, frag_offset=0, 
+                      ttl=64, protocol=IPPROTO_TCP, header_checksum=0):
+        len_total = len(seg) + 20
+        if identification is None:
+            identification = self.identification
+            ++self.identification
+        elif source_addr is None:
+            source_addr = self.meu_endereco
+
+        vihl = (version << 4) | ihl  
+        dscpecn = (dscp << 2) | ecn 
+        flagsfrag = (flags << 13) | frag_offset 
+        
+        source_addr = struct.unpack('!I', source_addr)
+        source_addr = struct.unpack('!I', dest_addr)
+        temp = struct.pack('!BBHHHBBHII', vihl, dscpecn, len_total,
+                           identification, flagsfrag, ttl, protocol, header_checksum,
+                           source_addr, dest_addr)
+        header_checksum = calc_checksum(temp)
+        header = struct.pack('!BBHHHBBHII', vihl, dscpecn, len_total,
+                             identification, flagsfrag, ttl, protocol, header_checksum,
+                             source_addr, dest_addr)
+        return header
 
     def definir_endereco_host(self, meu_endereco):
         """
