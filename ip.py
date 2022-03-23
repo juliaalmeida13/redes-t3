@@ -25,21 +25,31 @@ class IP:
             if proto == IPPROTO_TCP and self.callback:
                 self.callback(src_addr, dst_addr, payload)
         else:
-            # atua como roteador
+            # roteador
             next_hop = self._next_hop(dst_addr)
             # TODO: Trate corretamente o campo TTL do datagrama
             #Passo 4
-            --ttl #decrementando TTL
-            if ttl !=0:
-                header = self._header(payload, dst_addr, src_addr,
-                                      dscp=dscp, ecn=ecn, identification=identification,
-                                      flags=flags, frag_offset=frag_offset, ttl=ttl, protocol=proto)
-                datagrama = header + payload
-                self.enlace.enviar(datagrama, next_hop)
-            elif ttl == 0:
-                next_hop = self._next_hop(src_addr)
-                self.enlace.enviar(next_hop, next_hop)
+            vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, \
+            checksum, src_addr, dest_addr = \
+            struct.unpack('!BBHHHBBHII', datagrama[:20])
+            #decrementa ttl
+            --ttl
 
+            if ttl == 0:
+                typ = 11
+                code = 0
+                checksum_icmp = calc_checksum(struct.pack('!BBHI', typ,code,0,0)+datagrama[:28])
+                icmp = struct.pack('!BBHI', typ,code,checksum_icmp,0) + datagrama[:28]
+                next_hop = self._next_hop(src_addr)
+                addr_int = int.from_bytes(str2addr(self.meu_endereco), "big")
+                checksum = calc_checksum(struct.pack('!BBHHHBBHII', vihl, dscpecn, 20+len(icmp), identification, flagsfrag, 64, 1, 0, addr_int, src_addr))
+                datagrama = struct.pack('!BBHHHBBHII', vihl, dscpecn, 20+len(icmp), identification, flagsfrag, 64, 1, checksum, addr_int, src_addr) + icmp
+                self.idn+=1
+                self.enlace.enviar(datagrama, next_hop)
+            else:
+                checksum = calc_checksum(struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, 0, src_addr, dest_addr))
+                datagrama = struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, checksum, src_addr, dest_addr) + datagrama[20:]
+                self.enlace.enviar(datagrama, next_hop)
 
     def _next_hop(self, dest_addr):
         # TODO: Use a tabela de encaminhamento para determinar o próximo salto
@@ -52,32 +62,6 @@ class IP:
         enc.sort(key = lambda x: ip_network(x[0]).prefixlen, reverse = True)
         if enc:
             return enc[0][1]
-
-
-    def _header(self, seg, dest_addr, source_addr=None, version=4, ihl=5,
-                      dscp=0, ecn=0, identification=None, flags=0, frag_offset=0, 
-                      ttl=64, protocol=IPPROTO_TCP, header_checksum=0):
-        len_total = len(seg) + 20
-        if identification is None:
-            identification = self.identification
-            ++self.identification
-        elif source_addr is None:
-            source_addr = self.meu_endereco
-
-        vihl = (version << 4) | ihl  
-        dscpecn = (dscp << 2) | ecn 
-        flagsfrag = (flags << 13) | frag_offset 
-        
-        source_addr = struct.unpack('!I', source_addr)
-        source_addr = struct.unpack('!I', dest_addr)
-        temp = struct.pack('!BBHHHBBHII', vihl, dscpecn, len_total,
-                           identification, flagsfrag, ttl, protocol, header_checksum,
-                           source_addr, dest_addr)
-        header_checksum = calc_checksum(temp)
-        header = struct.pack('!BBHHHBBHII', vihl, dscpecn, len_total,
-                             identification, flagsfrag, ttl, protocol, header_checksum,
-                             source_addr, dest_addr)
-        return header
 
     def definir_endereco_host(self, meu_endereco):
         """
