@@ -28,7 +28,8 @@ class IP:
             # roteador
             next_hop = self._next_hop(dst_addr)
             # TODO: Trate corretamente o campo TTL do datagrama
-            #Passo 4
+
+            #Passos 4 e 5
             vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, \
             checksum, src_addr, dest_addr = \
             struct.unpack('!BBHHHBBHII', datagrama[:20])
@@ -91,7 +92,7 @@ class IP:
         """
         self.callback = callback
 
-    def enviar(self, segmento, dest_addr, datagrama):
+    def enviar(self, segmento, dest_addr):
         """
         Envia segmento para dest_addr, onde dest_addr é um endereço IPv4
         (string no formato x.y.z.w).
@@ -99,4 +100,16 @@ class IP:
         next_hop = self._next_hop(dest_addr)
         # TODO: Assumindo que a camada superior é o protocolo TCP, monte o
         # datagrama com o cabeçalho IP, contendo como payload o segmento.
+        
+        #Passo 2
+        flagsfrag, dscpecn = 0
+        vihl = 4<<4|5
+        len_total = len(segmento) + 20
+        identification = self.identification
+        self.identification += 1
+        ttl = 64
+        protocol = 6
+        src_addr = self.meu_endereco
+        checksum = calc_checksum(struct.pack('!BBHHHBBH', vihl, dscpecn, len_total, identification, flagsfrag, ttl, protocol, 0) + str2addr(src_addr) + str2addr(dest_addr))
+        datagrama = struct.pack('!BBHHHBBH', vihl, dscpecn, len_total, identification, flagsfrag, ttl, protocol, checksum) + str2addr(src_addr) + str2addr(dest_addr) + segmento 
         self.enlace.enviar(datagrama, next_hop)
