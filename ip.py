@@ -63,7 +63,7 @@ class IP:
                 splitItem = int(itemTabela[0].split("/")[1])
                 if  splitItem >= prev:
                     prev = int(itemTabela[0].split("/")[1])
-                    enc = i[1]
+                    enc = itemTabela[1]
         return enc
 
 
