@@ -56,13 +56,17 @@ class IP:
         # TODO: Use a tabela de encaminhamento para determinar o próximo salto
         # (next_hop) a partir do endereço de destino do datagrama (dest_addr).
         # Retorne o next_hop para o dest_addr fornecido.
-        enc = []
+        enc = None
+        prev = 0        
         for itemTabela in self.tabela:
-            if ip_address(dest_addr) in ip_network(itemTabela[0]):
-                enc = [itemTabela]
-        enc.sort(key = lambda x: ip_network(x[0]).prefixlen, reverse = True)
-        if enc:
-            return enc[0][1]
+            if ip_address(dest_addr) in ip_network(itemTabela[0]):                
+                splitItem = int(itemTabela[0].split("/")[1])
+                if  splitItem >= prev:
+                    prev = int(itemTabela[0].split("/")[1])
+                    enc = i[1]
+        return enc
+
+
 
     def definir_endereco_host(self, meu_endereco):
         """
