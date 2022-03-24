@@ -56,13 +56,17 @@ class IP:
         # TODO: Use a tabela de encaminhamento para determinar o próximo salto
         # (next_hop) a partir do endereço de destino do datagrama (dest_addr).
         # Retorne o next_hop para o dest_addr fornecido.
-        enc = []
+        enc = None
+        prev = 0        
         for itemTabela in self.tabela:
-            if ip_address(dest_addr) in ip_network(itemTabela[0]):
-                enc = [itemTabela]
-        enc.sort(key = lambda x: ip_network(x[0]).prefixlen, reverse = True)
-        if enc:
-            return enc[0][1]
+            if ip_address(dest_addr) in ip_network(itemTabela[0]):                
+                splitItem = int(itemTabela[0].split("/")[1])
+                if  splitItem >= prev:
+                    prev = int(itemTabela[0].split("/")[1])
+                    enc = itemTabela[1]
+        return enc
+
+
 
     def definir_endereco_host(self, meu_endereco):
         """
@@ -91,7 +95,7 @@ class IP:
         """
         self.callback = callback
 
-    def enviar(self, segmento, dest_addr, datagrama):
+    def enviar(self, segmento, dest_addr):
         """
         Envia segmento para dest_addr, onde dest_addr é um endereço IPv4
         (string no formato x.y.z.w).
@@ -99,4 +103,6 @@ class IP:
         next_hop = self._next_hop(dest_addr)
         # TODO: Assumindo que a camada superior é o protocolo TCP, monte o
         # datagrama com o cabeçalho IP, contendo como payload o segmento.
+        checksum = calc_checksum(struct.pack('!BBHHHBBH', 69, 0, 20+len(segmento), self.identification, 0, 64, 6, 0) + str2addr(self.meu_endereco) + str2addr(dest_addr))
+        datagrama = struct.pack('!BBHHHBBH', 69, 0, 20+len(segmento), self.identification, 0, 64, 6, checksum) + str2addr(self.meu_endereco) + str2addr(dest_addr) + segmento
         self.enlace.enviar(datagrama, next_hop)
